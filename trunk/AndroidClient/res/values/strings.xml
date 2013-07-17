@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">AndroidClient</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name ="point_label">%.4 f</string>
+	<string name ="location_not_available">Local não disponível</string>
+	<string name ="latitude_label">Latitude: </string>
+	<string name ="longitude_label"> Longitude: </string>
+	<string name ="unknown">desconhecido</string>
+	<string name="altura">"Altura: "</string>
+	<string name="altitude">"Altitude: "</string>
+	<string name="user_name">User Name:</string>
+	<string name="password">Password:</string>
+	<string name="login">Login</string>
+	<string name="exit">Exit</string>
+	<string name="label_localization">Localization</string>
+	<string name="update_local_environments">Update Local Environments</string>
+	<string name="device_info">Device Information</string>
+	<string name="logout">Logout</string>
+	<string name="main_menu_label">Main Menu</string>
+	<string name="environmente_label">Current Environment: </string>
+	<string name="localizationTime">"Time: "</string>
+
+</resources>
