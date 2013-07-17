@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<environments>
+    <environment id="1" name="Porto Alegre" type="absolute" >
+        <basePoint latitude="-30.072296142578118" longitude="-51.17763595581054" altitude="0.0" operatingRange="17550.786787873123" final="true" />
+		<point id="1" latitude="-29.9612808227539" longitude="-51.198184967041" altitude="0.0" />
+		<point id="2" latitude="-30.1073989868164" longitude="-51.2952117919922" altitude="0.0" />
+		<point id="3" latitude="-30.2264022827148" longitude="-51.216136932373" altitude="0.0" />
+		<point id="4" latitude="-30.0949935913086" longitude="-51.0650444030762" altitude="0.0" />
+		<point id="5" latitude="-29.9714050292969" longitude="-51.1136016845703" altitude="0.0" />
+	</environment>
+    <environment id="2" name="Campus Vale UFRGS" type="absolute" parentEnvironment="1">
+        <basePoint latitude="-30.071927547454848" longitude="-51.12007999420165" altitude="0.0" operatingRange="903.5247492068487" final="false"/>
+		<point id="1" latitude="-30.0655059814453" longitude="-51.1212463378906" altitude="0.0" />
+		<point id="2" latitude="-30.076099395752" longitude="-51.1259727478027" altitude="0.0" />
+		<point id="3" latitude="-30.0787830352783" longitude="-51.1150588989258" altitude="0.0" />
+		<point id="4" latitude="-30.0673217773438" longitude="-51.1180419921875" altitude="0.0" />
+	</environment>
+	<environment id="3" name="Prédio Informática 72" type="absolute" parentEnvironment="2">
+        <basePoint latitude="-30.06849765777585" longitude="-51.12047672271728" altitude="0.0" operatingRange="33.178127750365064" final="true" />
+		<point id="1" latitude="-30.0682048797607" longitude="-51.1204299926758" altitude="0.0" />
+		<point id="2" latitude="-30.0687103271484" longitude="-51.1207160949707" altitude="0.0" />
+		<point id="3" latitude="-30.068790435791" longitude="-51.1205253601074" altitude="0.0" />
+		<point id="4" latitude="-30.0682849884033" longitude="-51.1202354431152" altitude="0.0" />
+	</environment>
+	<environment id="4" name="Apartamento do Borges" type="absolute" parentEnvironment="1">
+        <basePoint latitude="-30.039857387542725" longitude="-51.20896339416505" altitude="0.0" operatingRange="20.826061643804927" final="true" />
+		<point id="1" latitude="-30.0400276184082" longitude="-51.2090530395508" altitude="0.0" />
+		<point id="2" latitude="-30.0399284362793" longitude="-51.2088470458984" altitude="0.0" />
+		<point id="3" latitude="-30.039737701416" longitude="-51.2088775634766" altitude="0.0" />
+		<point id="4" latitude="-30.0397357940674" longitude="-51.2090759277344" altitude="0.0" />
+	</environment>
+	<environment id="5" name="Laboratório 205" type="absolute" parentEnvironment="3">
+        <basePoint latitude="-30.0686149597168" longitude="-51.1206169128418" altitude="0.0" operatingRange="5.0" final="true" />
+	</environment>
+</environments>
