@@ -34,6 +34,6 @@ public class Config {
 	public static Environment CURRENT_USER_ENVIRONMENT = null;
 	public static Environment CURRENT_DEVICE_ENVIRONMENT = null; 
 	public static String LOGGED_USER_NAME = "borges";
-	//public static String SERVER_HOST = "http://192.168.1.120:8080/UbipriServer_v082/"; // Casa
-	public static String SERVER_HOST = "http://localhost:8084/UbipriServer/"; // Lab 205
+	public static String SERVER_HOST = "http://192.168.1.120:8080/UbipriServer/"; // Casa
+	//public static String SERVER_HOST = "http://localhost:8084/UbipriServer/"; // Lab 205
 }

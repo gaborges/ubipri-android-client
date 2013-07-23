@@ -14,13 +14,18 @@ import br.ufrgs.inf.ubipri.client.dao.EnvironmentDAO;
 import br.ufrgs.inf.ubipri.client.dao.UserDAO;
 import br.ufrgs.inf.ubipri.client.model.Action;
 import br.ufrgs.inf.ubipri.client.model.Environment;
+import br.ufrgs.inf.ubipri.client.model.Functionality;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.AudioManager;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import br.ufrgs.inf.ubipri.util.Config;
 import android.util.Log;
 import android.view.Menu;
 import android.widget.TextView;
@@ -138,6 +143,9 @@ public class LocalizationActivity extends Activity implements LocationListener {
 				} catch (JSONException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
+				} catch (RuntimeException e){
+					Toast.makeText(getBaseContext(), "Não foi possível enviar a nova localização para o servidor.", Toast.LENGTH_SHORT).show();
+					e.printStackTrace();
 				}
 			}
 			useDAO.updateUserEnvironment(environment);
@@ -162,26 +170,112 @@ public class LocalizationActivity extends Activity implements LocationListener {
 	}
 
 	public boolean applyActions(ArrayList<Action> actions){
-		/*
-		 * public static final Functionality DEVICE_FUNCTIONALITIES[] = {
-		new Functionality(1, "Bluetooh"), // Adicionar o estado atual do dispositico, String actual Action
-		new Functionality(2, "Silent Mode"),
-		new Functionality(3, "Vibrate Alert"),
-		new Functionality(4, "Airplane Mode"),
-		new Functionality(5, "Wi-Fi"),
-		new Functionality(6, "Mobile Network Data Access"),
-		new Functionality(7, "System Volume"),
-		new Functionality(8, "Media Volume"),
-		new Functionality(9, "Ringer Volume"),
-		new Functionality(10, "Screen Timeout"),
-		new Functionality(11, "Screen Brightness"),
-		new Functionality(12, "SMS"),
-		new Functionality(13, "Launch App"),
-		new Functionality(14, "Camera Access"),
-		new Functionality(15, "GPS")
-	};
-		 * 
-		 */
+		
+		for(int i = 0; i < Config.DEVICE_FUNCTIONALITIES.length;i++){
+			Functionality functionality = Config.DEVICE_FUNCTIONALITIES[i];
+			Action action = isActionFunctionality(functionality,actions);
+			if(action != null){
+				// Aplica action - ON ou OFF
+				Log.d("DEBUG","Ação "+i+" - "+actions.get(i).getAction()+" fid: "+actions.get(i).getFunctionalityId());
+				applyAction(action);
+			}else {
+				// retorna ao estado considerado normal / preferencia do usuário
+				// em resumo busca todas as preferencias do usuário, ou configurações default do dispositivo, cria uma ação e envia-a para ser aplicada
+				
+			}
+		}		
 		return true;
+	}
+	
+	private void applyAction(Action action) {
+		switch (action.getFunctionalityId()) {
+		case 1: // BLUETOOTH_STATE
+			BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter(); 
+        	if(adapter != null) {
+        		if(action.equals("on")){
+        			Log.d("DEBUG", "Bluetooth será habilitado!");
+        			if(adapter.getState() != BluetoothAdapter.STATE_ON) {
+            	        adapter.enable();
+            	    }
+        		} else if(action.equals("off")){
+        			Log.d("DEBUG", "Bluetooth será desabilitado!");
+        			if (adapter.getState() != BluetoothAdapter.STATE_OFF){
+        				adapter.disable();
+        			}
+         	    }  
+        	}
+			break;
+		case 2: // SILENT_MODE
+			   AudioManager mode = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+			   if(mode != null) {
+	        		if(action.equals("on")){
+	        			Log.d("DEBUG", "Modo Silêncioso habilitado!");
+	        			mode.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+	        		} else if(action.equals("off")){
+	        			Log.d("DEBUG", "Modo Silêncioso desabilitado!");
+	        			mode.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+	         	    }  
+	        	}
+			break;
+		case 3: // VIBRATION_STATE
+			AudioManager mode2 = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+			if(mode2 != null) {
+        		if(action.equals("on")){
+        			Log.d("DEBUG", "Modo Silêncioso habilitado!");
+        			mode2.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
+        		} else if(action.equals("off")){
+        			Log.d("DEBUG", "Modo Silêncioso desabilitado!");
+        			mode2.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+         	    }  
+        	}
+			break;
+		case 4: // AIRPLANE_MODE_STATE
+			Log.d("DEBUG", "Não permitido ser alterado!");
+			break;
+		case 5: // WIFI_STATE    -- WIFI_STATE_DISABLED, WIFI_STATE_DISABLING, WIFI_STATE_ENABLED
+			WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+			if(wifiManager != null) {
+        		if(action.equals("on")){
+        			Log.d("DEBUG", "Modo Silêncioso habilitado!");
+        			wifiManager.setWifiEnabled(true);
+        		} else if(action.equals("off")){
+        			Log.d("DEBUG", "Modo Silêncioso desabilitado!");
+        			wifiManager.setWifiEnabled(false);
+         	    }  
+        	}
+			
+			break;
+		case 9: // RINGER_VOLUME_VALUE
+			AudioManager mgr=(AudioManager)getSystemService(Context.AUDIO_SERVICE);
+			if(mgr != null){
+				if(action.equals("on")){
+					Log.d("DEBUG", "Som RING habilitado!");
+					mgr.setStreamVolume(AudioManager.STREAM_RING, AudioManager.ADJUST_SAME, AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+				} else if(action.equals("off")){
+					Log.d("DEBUG", "Som RING desabilitado!");
+					mgr.setStreamVolume(AudioManager.STREAM_RING,  AudioManager.ADJUST_SAME, AudioManager.FLAG_ALLOW_RINGER_MODES);
+			
+				}
+			}
+			break;
+		case 15: // GPS_STATUS
+			if(action.equals("on")){
+				Log.d("DEBUG", "Listener do GPS habilitado!");
+				locationManager.requestLocationUpdates(provider,400,1,this);
+			} else if(action.equals("off")){
+				Log.d("DEBUG", "Listener do GPS desabilitado!");
+				locationManager.removeUpdates(this);
+			}
+			break;
+		default:
+			Log.d("DEBUG", "Funcionalidade {fid:"+action.getFunctionalityId()+",action:"+action.getAction()+"} não suportada!");
+			break;
+		}		
+	}
+	private Action isActionFunctionality(Functionality f , ArrayList<Action> actions){
+		for(Action action : actions){
+			if(action.getFunctionalityId() == f.getId()) return action;
+		}
+		return null;
 	}
 }

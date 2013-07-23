@@ -32,7 +32,7 @@ public class TaskSendNewLocation extends AsyncTask<Object, Void, String> {
 	@Override
 	protected String doInBackground(Object ... params) {
 		try {
-	        URL url = new URL(Config.SERVER_HOST+"webresources/globalCommunication/change/localization/json/response");
+	        URL url = new URL(Config.SERVER_HOST+"webresources/rest/change/location/json/response");
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 	                conn.setDoOutput(true);
 	                conn.setRequestMethod("PUT");
@@ -47,10 +47,10 @@ public class TaskSendNewLocation extends AsyncTask<Object, Void, String> {
 			os.write(input.getBytes());
 			os.flush();
 	 
-			if (conn.getResponseCode() != HttpURLConnection.HTTP_CREATED && conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+			if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
 				throw new RuntimeException("Failed : HTTP error code : "
 					+ conn.getResponseCode());
-			}
+			} 
 	 
 			BufferedReader br = new BufferedReader(new InputStreamReader(
 					(conn.getInputStream())));
