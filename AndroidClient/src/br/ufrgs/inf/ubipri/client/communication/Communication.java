@@ -29,7 +29,7 @@ import br.ufrgs.inf.ubipri.client.model.User;
 public class Communication {
 	public ArrayList<Action> sendNewLocalization(Environment environment,
 			User user, Device device) throws ClientProtocolException,
-			IOException, InterruptedException, ExecutionException, JSONException {
+			IOException, InterruptedException, ExecutionException, JSONException,RuntimeException {
 		TaskSendNewLocation t = new TaskSendNewLocation();
 		Object params[] = new Object[4];
 		params[0] = user.getUserName();
