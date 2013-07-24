@@ -64,7 +64,7 @@ public class LocalizationActivity extends Activity implements LocationListener {
 		this.useDAO = new UserDAO();
 		this.communication = new Communication();
 		
-		// FunÃ§Ãµes para localizaÃ§Ã£o
+		// Funções para localização
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		Criteria criteria = new Criteria();
 		provider = locationManager.getBestProvider(criteria, false);
@@ -176,8 +176,8 @@ public class LocalizationActivity extends Activity implements LocationListener {
 			Action action = isActionFunctionality(functionality,actions);
 			if(action != null){
 				// Aplica action - ON ou OFF
-				Log.d("DEBUG","Ação "+i+" - "+actions.get(i).getAction()+" fid: "+actions.get(i).getFunctionalityId());
-				applyAction(action);
+				Log.d("DEBUG APPLY","Ação "+i+" - "+action.getAction()+" fid: "+action.getFunctionalityId());
+				applyActionTest(action);
 			}else {
 				// retorna ao estado considerado normal / preferencia do usuário
 				// em resumo busca todas as preferencias do usuário, ou configurações default do dispositivo, cria uma ação e envia-a para ser aplicada
@@ -187,17 +187,17 @@ public class LocalizationActivity extends Activity implements LocationListener {
 		return true;
 	}
 	
-	private void applyAction(Action action) {
+	protected void applyAction(Action action) {
 		switch (action.getFunctionalityId()) {
 		case 1: // BLUETOOTH_STATE
 			BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter(); 
         	if(adapter != null) {
-        		if(action.equals("on")){
+        		if(action.getAction().equals("on")){
         			Log.d("DEBUG", "Bluetooth será habilitado!");
         			if(adapter.getState() != BluetoothAdapter.STATE_ON) {
             	        adapter.enable();
             	    }
-        		} else if(action.equals("off")){
+        		} else if(action.getAction().equals("off")){
         			Log.d("DEBUG", "Bluetooth será desabilitado!");
         			if (adapter.getState() != BluetoothAdapter.STATE_OFF){
         				adapter.disable();
@@ -208,10 +208,10 @@ public class LocalizationActivity extends Activity implements LocationListener {
 		case 2: // SILENT_MODE
 			   AudioManager mode = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
 			   if(mode != null) {
-	        		if(action.equals("on")){
+	        		if(action.getAction().equals("on")){
 	        			Log.d("DEBUG", "Modo Silêncioso habilitado!");
 	        			mode.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-	        		} else if(action.equals("off")){
+	        		} else if(action.getAction().equals("off")){
 	        			Log.d("DEBUG", "Modo Silêncioso desabilitado!");
 	        			mode.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
 	         	    }  
@@ -220,10 +220,10 @@ public class LocalizationActivity extends Activity implements LocationListener {
 		case 3: // VIBRATION_STATE
 			AudioManager mode2 = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
 			if(mode2 != null) {
-        		if(action.equals("on")){
+        		if(action.getAction().equals("on")){
         			Log.d("DEBUG", "Modo Silêncioso habilitado!");
         			mode2.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
-        		} else if(action.equals("off")){
+        		} else if(action.getAction().equals("off")){
         			Log.d("DEBUG", "Modo Silêncioso desabilitado!");
         			mode2.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
          	    }  
@@ -235,10 +235,10 @@ public class LocalizationActivity extends Activity implements LocationListener {
 		case 5: // WIFI_STATE    -- WIFI_STATE_DISABLED, WIFI_STATE_DISABLING, WIFI_STATE_ENABLED
 			WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 			if(wifiManager != null) {
-        		if(action.equals("on")){
+        		if(action.getAction().equals("on")){
         			Log.d("DEBUG", "Modo Silêncioso habilitado!");
         			wifiManager.setWifiEnabled(true);
-        		} else if(action.equals("off")){
+        		} else if(action.getAction().equals("off")){
         			Log.d("DEBUG", "Modo Silêncioso desabilitado!");
         			wifiManager.setWifiEnabled(false);
          	    }  
@@ -248,10 +248,10 @@ public class LocalizationActivity extends Activity implements LocationListener {
 		case 9: // RINGER_VOLUME_VALUE
 			AudioManager mgr=(AudioManager)getSystemService(Context.AUDIO_SERVICE);
 			if(mgr != null){
-				if(action.equals("on")){
+				if(action.getAction().equals("on")){
 					Log.d("DEBUG", "Som RING habilitado!");
 					mgr.setStreamVolume(AudioManager.STREAM_RING, AudioManager.ADJUST_SAME, AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
-				} else if(action.equals("off")){
+				} else if(action.getAction().equals("off")){
 					Log.d("DEBUG", "Som RING desabilitado!");
 					mgr.setStreamVolume(AudioManager.STREAM_RING,  AudioManager.ADJUST_SAME, AudioManager.FLAG_ALLOW_RINGER_MODES);
 			
@@ -259,10 +259,10 @@ public class LocalizationActivity extends Activity implements LocationListener {
 			}
 			break;
 		case 15: // GPS_STATUS
-			if(action.equals("on")){
+			if(action.getAction().equals("on")){
 				Log.d("DEBUG", "Listener do GPS habilitado!");
 				locationManager.requestLocationUpdates(provider,400,1,this);
-			} else if(action.equals("off")){
+			} else if(action.getAction().equals("off")){
 				Log.d("DEBUG", "Listener do GPS desabilitado!");
 				locationManager.removeUpdates(this);
 			}
@@ -277,5 +277,57 @@ public class LocalizationActivity extends Activity implements LocationListener {
 			if(action.getFunctionalityId() == f.getId()) return action;
 		}
 		return null;
+	}
+	private void applyActionTest(Action action) {
+		switch (action.getFunctionalityId()) {
+		case 1: // BLUETOOTH_STATE
+    		if(action.getAction().equals("on")){
+    			Log.d("DEBUG", "Bluetooth será habilitado!");
+    		} else if(action.getAction().equals("off")){
+    			Log.d("DEBUG", "Bluetooth será desabilitado!");
+     	    }  
+			break;
+		case 2: // SILENT_MODE
+    		if(action.getAction().equals("on")){
+    			Log.d("DEBUG", "Modo Silêncioso habilitado!");
+    		} else if(action.getAction().equals("off")){
+    			Log.d("DEBUG", "Modo Silêncioso desabilitado!");
+     	    }  
+			break;
+		case 3: // VIBRATION_STATE
+    		if(action.getAction().equals("on")){
+    			Log.d("DEBUG", "Modo Silêncioso habilitado!");
+    		} else if(action.getAction().equals("off")){
+    			Log.d("DEBUG", "Modo Silêncioso desabilitado!");
+     	    }  
+			break;
+		case 4: // AIRPLANE_MODE_STATE
+			Log.d("DEBUG", "Não permitido ser alterado!");
+			break;
+		case 5: // WIFI_STATE    -- WIFI_STATE_DISABLED, WIFI_STATE_DISABLING, WIFI_STATE_ENABLED
+        		if(action.getAction().equals("on")){
+        			Log.d("DEBUG", "Modo Silêncioso habilitado!");
+        		} else if(action.getAction().equals("off")){
+        			Log.d("DEBUG", "Modo Silêncioso desabilitado!");
+         	    }  
+			break;
+		case 9: // RINGER_VOLUME_VALUE
+			if(action.getAction().equals("on")){
+				Log.d("DEBUG", "Som RING habilitado!");
+			} else if(action.getAction().equals("off")){
+				Log.d("DEBUG", "Som RING desabilitado!");
+			}
+			break;
+		case 15: // GPS_STATUS
+			if(action.getAction().equals("on")){
+				Log.d("DEBUG", "Listener do GPS habilitado!");
+			} else if(action.getAction().equals("off")){
+				Log.d("DEBUG", "Listener do GPS desabilitado!");
+			}
+			break;
+		default:
+			Log.d("DEBUG", "Funcionalidade {fid:"+action.getFunctionalityId()+",action:"+action.getAction()+"} não suportada!");
+			break;
+		}		
 	}
 }
