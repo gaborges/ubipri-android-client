@@ -25,6 +25,7 @@ import br.ufrgs.inf.ubipri.client.model.Action;
 import br.ufrgs.inf.ubipri.client.model.Device;
 import br.ufrgs.inf.ubipri.client.model.Environment;
 import br.ufrgs.inf.ubipri.client.model.User;
+import br.ufrgs.inf.ubipri.util.Config;
 
 public class Communication {
 	public ArrayList<Action> sendNewLocalization(Environment environment,
@@ -87,8 +88,40 @@ public class Communication {
 		return null;
 	}
 
-	public User getUser(String userName, String password) {
+	public User getUser(String userName, String password) throws InterruptedException, ExecutionException, JSONException {
+		if(remoteLogin(userName, password, Config.DEVICE_CODE)){
+			return new User(userName, password);
+		}
 		return null;
+	}
+	
+	public boolean remoteLogin(String userName, String password, String deviceCode) throws InterruptedException, ExecutionException, JSONException{
+		TaskRemoteLogin task = new TaskRemoteLogin();
+		task.execute(userName,password,deviceCode);
+		String strJson = task.get();
+		
+		// Por algum motivo infernal aparecem conchetes no início e outra no fim
+		// Desta forma se elas aparecem, removeos
+		if(strJson.charAt(0) == '[' && strJson.endsWith("]")) {
+			char a[] = strJson.toCharArray();
+			strJson = "";
+			for(int i = 1; i < (a.length-1); i++){
+				strJson += a[i];
+			}
+		}
+		
+		Log.d("DEBUG","Response strJSON: "+strJson);
+		//strJson = "{\"status\":\"OK\"}";
+		JSONObject status = null;
+		status = (JSONObject) new JSONTokener(strJson).nextValue();
+		
+		if(status != null){
+			if(status.has("status")){
+				Log.d("DEBUG","Status: "+status.getString("status"));
+				if(status.getString("status").equals("OK")) return true;
+			}
+		}
+		return false;
 	}
 
 	public Device deviceInformations(String code) {

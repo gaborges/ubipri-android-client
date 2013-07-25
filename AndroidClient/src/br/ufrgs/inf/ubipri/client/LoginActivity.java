@@ -3,11 +3,13 @@ package br.ufrgs.inf.ubipri.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.json.JSONException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -90,7 +92,18 @@ public class LoginActivity extends Activity {
 				if(user == null){ 
 					// se n�o est� cadastrato pergunta se o usu�rio esta�cadastrado no servidor
 					communication = new Communication();
-					user = communication.getUser(userName, userPassword);
+					try {
+						user = communication.getUser(userName, userPassword);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (ExecutionException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (JSONException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 					if(user == null){
 						// se n�o encontrou no servidor, usu�rio n�o tem permiss�o de uso ou errou a senha
 						Toast.makeText(getBaseContext(), "Incorrect Username or Password.", Toast.LENGTH_LONG).show();
