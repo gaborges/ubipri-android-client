@@ -19,19 +19,15 @@ import br.ufrgs.inf.ubipri.util.Config;
 
 public class Communication {
 	/*
-	 * this Method is respon 
+	 * This method sends the new location to the server and waits for a return message containing the action. 
+	 * Then, process the message and generates a list of actions
 	 */
 	public ArrayList<Action> sendNewLocalization(Environment environment,
 			User user, Device device) throws ClientProtocolException,
 			IOException, InterruptedException, ExecutionException, JSONException,RuntimeException {
-		TaskSendNewLocation t = new TaskSendNewLocation();
-		Object params[] = new Object[4];
-		params[0] = user.getUserName();
-		params[1] = user.getUserPassword();
-		params[2] = device.getCode();
-		params[3] = environment.getId();
 		
-		t.execute(params);
+		TaskSendNewLocation t = new TaskSendNewLocation();
+		t.execute(user.getUserName(),user.getUserPassword(),device.getCode(),environment.getId());
 		String strJson = t.get();
 		
 		strJson = cleanStrJsonMessage(strJson);
@@ -56,7 +52,9 @@ public class Communication {
 		return actions;
 	}
 	
-	// fid - action
+	/*
+	 * This method process the JSONArray and generates a list of actions
+	 */
 	private ArrayList<Action> JSONArrayToArrayList(JSONArray jsonActions) throws JSONException{
 		if(Config.DEBUG_COMMUNICATION) Log.d("DEBUG","Num. JSON actions: "+jsonActions.length());
 		ArrayList<Action> actions = new ArrayList<Action>();
@@ -69,18 +67,30 @@ public class Communication {
 		return actions;
 	}
 
+	/*
+	 * This method is used to bring environments remotely.
+	 * OBS.: This function not is implemented yet!
+	 */
 	public Environment getEnvironments() {
 
 		return null;
 	}
 
+	/*
+	 * This method checks if the user is registered on the server. 
+	 * If yes, creates an object User with the login data, else it returns null.
+	 */
 	public User getUser(String userName, String password) throws InterruptedException, ExecutionException, JSONException {
 		if(remoteLogin(userName, password, Config.DEVICE_CODE)){
 			return new User(userName, password);
 		}
 		return null;
 	}
-	
+
+	/*
+	 * This method checks if the user is registered on the server. 
+	 * If yes, return true, else it returns false.
+	 */
 	public boolean remoteLogin(String userName, String password, String deviceCode) throws InterruptedException, ExecutionException, JSONException{
 		TaskRemoteLogin task = new TaskRemoteLogin();
 		task.execute(userName,password,deviceCode);
@@ -102,10 +112,18 @@ public class Communication {
 		return false;
 	}
 
+	/*
+	 * This method is used to bring the device information remotely.
+	 * OBS.: This function not is implemented yet!
+	 */
 	public Device deviceInformations(String code) {
 		return null;
 	}
 	
+	/*
+	 * This method send to server the new device code for be used in the Google Cloud Message
+	 * Returns true if successful, else it returns false.
+	 */
 	public boolean sendNewDeviceCommunicationCode(String userName, String userPassword, 
 			String deviceCode, String communicationCode) throws JSONException, InterruptedException, ExecutionException{
 		TaskSendNewCommunicationCode t = new TaskSendNewCommunicationCode();
@@ -131,6 +149,11 @@ public class Communication {
 		return false;
 	}
 	
+	
+	/*
+	 * Clean the JSON message. Unusually brackets appear at the beginning 
+	 *  and end of the message, which impairs reading the message. This method removes them
+	 */
 	private String cleanStrJsonMessage(String strJson) {
 		// Por algum motivo infernal aparecem colchetes no início e no fim da
 		// mensagem
