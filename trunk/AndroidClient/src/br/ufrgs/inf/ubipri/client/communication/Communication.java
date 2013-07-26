@@ -1,25 +1,15 @@
 package br.ufrgs.inf.ubipri.client.communication;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-import android.os.AsyncTask;
 import android.util.Log;
 import br.ufrgs.inf.ubipri.client.model.Action;
 import br.ufrgs.inf.ubipri.client.model.Device;
@@ -28,6 +18,9 @@ import br.ufrgs.inf.ubipri.client.model.User;
 import br.ufrgs.inf.ubipri.util.Config;
 
 public class Communication {
+	/*
+	 * this Method is respon 
+	 */
 	public ArrayList<Action> sendNewLocalization(Environment environment,
 			User user, Device device) throws ClientProtocolException,
 			IOException, InterruptedException, ExecutionException, JSONException,RuntimeException {
@@ -40,17 +33,11 @@ public class Communication {
 		
 		t.execute(params);
 		String strJson = t.get();
-		// Por algum motivo infernal aparecem conchetes no início e outra no fim
-		// Desta forma se elas aparecem, removeos
-		if(strJson.charAt(0) == '[' && strJson.endsWith("]")) {
-			char a[] = strJson.toCharArray();
-			strJson = "";
-			for(int i = 1; i < (a.length-1); i++){
-				strJson += a[i];
-			}
-		}
-		Log.d("DEBUG","Response strJSON: "+strJson);
-		//strJson = "{\"status\":\"OK\"}";
+		
+		strJson = cleanStrJsonMessage(strJson);
+		
+		if(Config.DEBUG_COMMUNICATION)Log.d("DEBUG","Response strJSON: "+strJson);
+
 		JSONObject status = null;
 		ArrayList<Action> actions = new ArrayList<Action>();
 		status = (JSONObject) new JSONTokener(strJson).nextValue();
@@ -58,27 +45,26 @@ public class Communication {
 		
 		if(status != null){
 			if(status.has("status")){
-				Log.d("DEBUG","Status: "+status.getString("status"));
+				if(Config.DEBUG_COMMUNICATION) Log.d("DEBUG","Status: "+status.getString("status"));
 				if(status.has("actions")){
 					
 					actions = JSONArrayToArrayList(status.getJSONArray("actions"));		
-					Log.d("DEBUG","Num. Actions: "+actions.size());
+					if(Config.DEBUG_COMMUNICATION) Log.d("DEBUG","Num. Actions: "+actions.size());
 				}
 			}
 		}
 		return actions;
-
 	}
 	
 	// fid - action
 	private ArrayList<Action> JSONArrayToArrayList(JSONArray jsonActions) throws JSONException{
-		Log.d("DEBUG","Num. JSON actions: "+jsonActions.length());
+		if(Config.DEBUG_COMMUNICATION) Log.d("DEBUG","Num. JSON actions: "+jsonActions.length());
 		ArrayList<Action> actions = new ArrayList<Action>();
 		JSONObject temp = null;
 		for(int i = 0; i < jsonActions.length();i++){
 			temp = jsonActions.getJSONObject(i);
 			actions.add(new Action(temp.getString("action"), temp.getInt("fid")));
-			Log.d("DEBUG","Ação "+i+" - "+actions.get(i).getAction()+" fid: "+actions.get(i).getFunctionalityId());
+			if(Config.DEBUG_COMMUNICATION) Log.d("DEBUG","Ação "+i+" - "+actions.get(i).getAction()+" fid: "+actions.get(i).getFunctionalityId());
 		}
 		return actions;
 	}
@@ -100,24 +86,16 @@ public class Communication {
 		task.execute(userName,password,deviceCode);
 		String strJson = task.get();
 		
-		// Por algum motivo infernal aparecem conchetes no início e outra no fim
-		// Desta forma se elas aparecem, removeos
-		if(strJson.charAt(0) == '[' && strJson.endsWith("]")) {
-			char a[] = strJson.toCharArray();
-			strJson = "";
-			for(int i = 1; i < (a.length-1); i++){
-				strJson += a[i];
-			}
-		}
+		strJson = cleanStrJsonMessage(strJson);
 		
-		Log.d("DEBUG","Response strJSON: "+strJson);
-		//strJson = "{\"status\":\"OK\"}";
+		if(Config.DEBUG_COMMUNICATION)Log.d("DEBUG","Response strJSON: "+strJson);
+		
 		JSONObject status = null;
 		status = (JSONObject) new JSONTokener(strJson).nextValue();
 		
 		if(status != null){
 			if(status.has("status")){
-				Log.d("DEBUG","Status: "+status.getString("status"));
+				if(Config.DEBUG_COMMUNICATION)Log.d("DEBUG","Status: "+status.getString("status"));
 				if(status.getString("status").equals("OK")) return true;
 			}
 		}
@@ -126,6 +104,45 @@ public class Communication {
 
 	public Device deviceInformations(String code) {
 		return null;
+	}
+	
+	public boolean sendNewDeviceCommunicationCode(String userName, String userPassword, 
+			String deviceCode, String communicationCode) throws JSONException, InterruptedException, ExecutionException{
+		TaskSendNewCommunicationCode t = new TaskSendNewCommunicationCode();
+
+		String strJson = null;
+		t.execute(userName, userPassword, deviceCode, communicationCode);
+	
+		strJson = t.get();
+
+		if(Config.DEBUG_COMMUNICATION) Log.d("DEBUG","Response Change Communication Code: "+strJson);
+		
+		strJson = cleanStrJsonMessage(strJson);
+		
+		JSONObject status = null;
+		status = (JSONObject) new JSONTokener(strJson).nextValue();
+		
+		if(status != null){
+			if(status.has("status")){
+				if(Config.DEBUG_COMMUNICATION)Log.d("DEBUG","Status: "+status.getString("status"));
+				if(status.getString("status").equals("OK")) return true;
+			}
+		}
+		return false;
+	}
+	
+	private String cleanStrJsonMessage(String strJson) {
+		// Por algum motivo infernal aparecem colchetes no início e no fim da
+		// mensagem
+		// Desta forma se elas aparecem serão removidas
+		if (strJson.charAt(0) == '[' && strJson.endsWith("]")) {
+			char a[] = strJson.toCharArray();
+			strJson = "";
+			for (int i = 1; i < (a.length - 1); i++) {
+				strJson += a[i];
+			}
+		}
+		return strJson;
 	}
 
 }

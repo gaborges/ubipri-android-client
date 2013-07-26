@@ -12,17 +12,17 @@ public class Config {
 		new Functionality(1, "Bluetooh"), // Adicionar o estado atual do dispositico, String actual Action
 		new Functionality(2, "Silent Mode"),
 		new Functionality(3, "Vibrate Alert"),
-		new Functionality(4, "Airplane Mode"),
+	//	new Functionality(4, "Airplane Mode"),
 		new Functionality(5, "Wi-Fi"),
-		new Functionality(6, "Mobile Network Data Access"),
-		new Functionality(7, "System Volume"),
-		new Functionality(8, "Media Volume"),
+	//	new Functionality(6, "Mobile Network Data Access"),
+	//	new Functionality(7, "System Volume"),
+	//	new Functionality(8, "Media Volume"),
 		new Functionality(9, "Ringer Volume"),
-		new Functionality(10, "Screen Timeout"),
-		new Functionality(11, "Screen Brightness"),
-		new Functionality(12, "SMS"),
-		new Functionality(13, "Launch App"),
-		new Functionality(14, "Camera Access"),
+	//	new Functionality(10, "Screen Timeout"),
+	//	new Functionality(11, "Screen Brightness"),
+	//	new Functionality(12, "SMS"),
+	//	new Functionality(13, "Launch App"),
+	//	new Functionality(14, "Camera Access"),
 		new Functionality(15, "GPS")
 	};
 	
@@ -36,4 +36,6 @@ public class Config {
 	public static String LOGGED_USER_NAME = "borges";
 	public static String SERVER_HOST = "http://192.168.1.120:8080/UbipriServer/"; // Casa
 	//public static String SERVER_HOST = "http://localhost:8084/UbipriServer/"; // Lab 205
+	
+	public static boolean DEBUG_COMMUNICATION = true;
 }
