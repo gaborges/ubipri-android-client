@@ -20,12 +20,6 @@
         android:text="@string/label_localization" />
 
     <Button
-        android:id="@+id/btnUpdateLocalEnvironments"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/update_local_environments" />
-
-    <Button
         android:id="@+id/btnDeviceInformation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
