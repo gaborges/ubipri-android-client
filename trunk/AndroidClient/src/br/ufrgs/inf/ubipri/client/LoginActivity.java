@@ -21,6 +21,7 @@ import br.ufrgs.inf.ubipri.client.dao.UserDAO;
 import br.ufrgs.inf.ubipri.client.model.Environment;
 import br.ufrgs.inf.ubipri.client.model.Point;
 import br.ufrgs.inf.ubipri.client.model.User;
+import br.ufrgs.inf.ubipri.util.Config;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -55,44 +56,48 @@ public class LoginActivity extends Activity {
 
 		setContentView(R.layout.login);
 		
-		// une a refer�ncia do XML com objetos
+		// They have the references to the elements in the XML layout
 		this.edtUserName = (EditText) findViewById(R.id.edtUserName);
 		this.edtPassword = (EditText) findViewById(R.id.edtPassword);
 		this.btnLogin = (Button) findViewById(R.id.btnLogin);
 		this.btnExit = (Button) findViewById(R.id.btnExit);
 		
-		// Cria o banco de dados caso ele n�o exista
-		this.createDB();
-		this.userDAO = new UserDAO();
+		// UserDao instantiates an object to manipulate the database, if the database has not been created then it is created
+		this.userDAO = new UserDAO(getBaseContext());
 		
 		try {
+			// Open the file: environments.xml in assets. 
 			InputStream is = getAssets().open("environments.xml");
-			Log.d("DEBUG", "Poss�vel ler:  "+is.available());
+			if(Config.DEBUG_LOGIN_ACTIVITY)Log.d("DEBUG", "Possível ler:  "+is.available());
+			// This function read the file environments.xml for create a tree to be used for localization activity
 			EnvironmentDAO.setRootEnvironment(XMLToEnvironmentTree(is));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ParserConfigurationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (SAXException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		// This function adds support to the event onClickListener
 		this.btnLogin.setOnClickListener(new View.OnClickListener() {
 			
 			@Override
 			public void onClick(View v) {
+				
+				// If the btnLogin Button is clicked the values of edit texts will be recovered 
 				// Ao ser clicado no login recupera os valores dos edit texts
 				userName = edtUserName.getText().toString();
 				userPassword = edtPassword.getText().toString();
 				
-				// verifica se o usu�rio j� est� cadastrado
+				// Checks if the user is registered in the local database. If he not, return null;
 				User user = userDAO.get(userName, userPassword);
+			
 				if(user == null){ 
-					// se n�o est� cadastrato pergunta se o usu�rio esta�cadastrado no servidor
+					// The Object Communication is instantiates
 					communication = new Communication();
 					try {
+						// Checks if the user is registred in the remote server. If he not, return null;
 						user = communication.getUser(userName, userPassword);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
@@ -105,21 +110,21 @@ public class LoginActivity extends Activity {
 						e.printStackTrace();
 					}
 					if(user == null){
-						// se n�o encontrou no servidor, usu�rio n�o tem permiss�o de uso ou errou a senha
+						// If the userLogin and the userPassword not found on the server database and on the local database
+						// 	show a message: Incorrect Username or Password.
 						Toast.makeText(getBaseContext(), "Incorrect Username or Password.", Toast.LENGTH_LONG).show();
-						return; // termina execução
+						return;
 					}
-					// Se encontrou o novo usuário, insere ele no banco local
+					// If the user is found on the server, then he will be inserted in the local database
 					userDAO.insert(user);
 				}
-				// Apaga os valores dos EditTexts
+				// Clears the values ​​in the Edit Texts
 				edtPassword.setText("");
 				edtUserName.setText("");
 				
-				// se usu�rio foi encontrado passa dados por par�metro e abre o menu
+				// Open the menu and put the userName in the LOGGED_USER_NAME static variable, to be used.
 				Intent intentMenu = new Intent(getBaseContext(),MenuActivity.class);
-				intentMenu.putExtra("userName", userName);
-				intentMenu.putExtra("userPassword", userPassword);
+				Config.LOGGED_USER_NAME = user.getUserName();
 				startActivity(intentMenu);
 			}
 		});
@@ -133,13 +138,12 @@ public class LoginActivity extends Activity {
 		});
 	}
 	
-	private void createDB(){
-		// Falta criar o banco com tabelas
-		
-	}
-	
+	/*
+	 * Function for read the XML that contains the registred environments.
+	 * OBS.: This approach is for testing. Future environments should be registered by the server remotely.
+	 */
 	 public ArrayList<Environment> XMLToEnvironmentList(InputStream inputStream) throws ParserConfigurationException, SAXException, IOException {
-	    	Log.d("DEBUG", "Poss�vel ler no MAP:  "+inputStream.available());
+		    if(Config.DEBUG_LOGIN_ACTIVITY)Log.d("DEBUG", "Possível ler no MAP:  "+inputStream.available());
 	    	ArrayList<Environment> listEnvironment = new ArrayList<Environment>();
 	        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 	        DocumentBuilder db = dbf.newDocumentBuilder();
@@ -160,8 +164,8 @@ public class LoginActivity extends Activity {
 	            	Log.d("READ XML","Default Type: " + element.getAttribute("type"));
 	            }*/
 	            if (element.hasAttribute("parentEnvironment")) {
-	                Log.d("READ XML","parentEnvironment: " + element.getAttribute("parentEnvironment"));
-	                // depois verifica se possui na lista o id do ambiente, sen�o cria uma objeto somente com o ID
+	            	if(Config.DEBUG_LOGIN_ACTIVITY) Log.d("READ XML","parentEnvironment: " + element.getAttribute("parentEnvironment"));
+	                // depois verifica se possui na lista o id do ambiente, senão cria uma objeto somente com o ID
 	                temp.setParentEnvironment(new Environment(Integer.parseInt(element.getAttribute("parentEnvironment"))));
 	            }
 
@@ -218,7 +222,7 @@ public class LoginActivity extends Activity {
 	 public Environment XMLToEnvironmentTree(InputStream inputStream) throws ParserConfigurationException, SAXException, SAXException, IOException {
 	        Environment root = null;
 	        ArrayList<Environment> list = this.XMLToEnvironmentList(inputStream);
-	        // Encontra o n� raiz
+	        // Encontra o nó raiz
 	        for(Environment e : list){
 	            if(e.getParentEnvironment() == null){
 	                root = e;

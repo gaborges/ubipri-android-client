@@ -7,9 +7,13 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
 
+import br.ufrgs.inf.ubipri.client.BDHelper;
 import br.ufrgs.inf.ubipri.client.model.Environment;
 import br.ufrgs.inf.ubipri.client.model.EnvironmentMap;
 import br.ufrgs.inf.ubipri.client.model.Point;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.util.Log;
 
@@ -88,4 +92,5 @@ public class EnvironmentDAO {
 	public static void setRootEnvironment(Environment rootEnvironment) {
 		EnvironmentDAO.rootEnvironment = rootEnvironment;
 	}
+	
 }

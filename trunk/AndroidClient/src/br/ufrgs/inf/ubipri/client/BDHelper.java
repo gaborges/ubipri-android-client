@@ -17,7 +17,7 @@ public class BDHelper extends SQLiteOpenHelper {
 	    " create table user (id integer primary key autoincrement, username text not null," + 
 	    		" userpassword text not null, name text); ",
 	    " create table log (id integer primary key autoincrement, user text not null, device text not null," +
-	    		" enviroment integer not null, comment text, time text"};
+	    		" enviroment integer not null, comment text, time text);"};
 
 	  
 	  /*

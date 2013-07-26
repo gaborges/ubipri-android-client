@@ -11,6 +11,7 @@ import org.json.JSONException;
 import br.ufrgs.inf.ubipri.client.communication.Communication;
 import br.ufrgs.inf.ubipri.client.dao.DeviceDAO;
 import br.ufrgs.inf.ubipri.client.dao.EnvironmentDAO;
+import br.ufrgs.inf.ubipri.client.dao.LogDAO;
 import br.ufrgs.inf.ubipri.client.dao.UserDAO;
 import br.ufrgs.inf.ubipri.client.model.Action;
 import br.ufrgs.inf.ubipri.client.model.Environment;
@@ -33,6 +34,7 @@ import android.widget.Toast;
 
 public class LocalizationActivity extends Activity implements LocationListener {
 
+	// Attributes of the object
 	private static final String TAG = " MainActivity ";
 	private TextView txtLatitude;
 	private TextView txtLongitude;
@@ -43,6 +45,7 @@ public class LocalizationActivity extends Activity implements LocationListener {
 	private Communication communication;
 	private DeviceDAO devDAO;
 	private UserDAO useDAO;
+	private LogDAO logDAO;
 	private LocationManager locationManager;
 	private String provider;
 
@@ -52,33 +55,38 @@ public class LocalizationActivity extends Activity implements LocationListener {
 		setContentView(R.layout.localization);
 
 		// Vincular Views com Elementos do Layout XML
+		// They have the references to the elements in the XML layout
 		txtLatitude = (TextView) findViewById(R.id.txtLatitude);
 		txtLongitude = (TextView) findViewById(R.id.txtLongitude);
 		txtAltitude = (TextView) findViewById(R.id.txtAltitude);
 		txtTime = (TextView) findViewById(R.id.txtTime);
 		txtEnvironment = (TextView) findViewById(R.id.txtCurrentEnvironment);
 
-		// Declarar variÃ¡veis			
+		// Instance variables based access to local and remote			
 		this.envDAO = new EnvironmentDAO();
 		this.devDAO = new DeviceDAO();
-		this.useDAO = new UserDAO();
+		this.useDAO = new UserDAO(getBaseContext());
+		this.logDAO = new LogDAO(getBaseContext());
 		this.communication = new Communication();
 		
-		// Funções para localização
+		// FunÃ§Ãµes para localizaÃ§Ã£o
+		// Localization functions
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		// Criteria for select the provider of localization. Only are considered available providers.
 		Criteria criteria = new Criteria();
 		provider = locationManager.getBestProvider(criteria, false);
+		// Get the last Known Location
 		Location location = locationManager.getLastKnownLocation(provider);
 
-		// Se encontrou alguma localizaÃ§Ã£o
+		// If it found any location
 		if (location != null) {
 			// Logs do Android
-			Log.d(TAG, " Provider " + provider + " foi selecionado.");
-			Log.d(TAG, "Longitude: "+location.getLongitude()
+			if(Config.DEBUG_LOCATION_ACTIVITY) Log.d(TAG, " Provider " + provider + " foi selecionado.");
+			if(Config.DEBUG_LOCATION_ACTIVITY) Log.d(TAG, "Longitude: "+location.getLongitude()
 					+" Latitude: "+location.getLatitude()
 					+" Altitude: "+location.getAltitude());
 			
-			// funÃ§Ã£o de mudanÃ§a de ambiente
+			// this function will be called if has the localization change
 			onLocationChanged(location);
 		} else {
 			txtLatitude.setText(R.string.location_not_available);
@@ -111,43 +119,54 @@ public class LocalizationActivity extends Activity implements LocationListener {
 
 	@Override
 	public void onLocationChanged(Location location) {
+		// Takes the values â€‹â€‹of longitude, latitude and time of the location
 		double lat = location.getLatitude();
 		double lng = location.getLongitude();
 		Date time = new Date(location.getTime());
+		
+		// Show the values in the screen
 		txtLatitude.setText(String.valueOf(lat));
 		txtLongitude.setText(String.valueOf(lng));
 		txtAltitude.setText(String.valueOf(location.getAltitude()));
 		txtTime.setText(time.toString());
+		
+		// if the new location not changing environment, then is not necessary to communicate the server.
 		if(envDAO.hasChangedCurrentEnvironment(location)){
-			Environment environment = envDAO.getEnvironment(location);
+			
+			// if the environment has changed, then get the informations of him. Return null, if not found.
+			Environment environment = envDAO.getEnvironment(location);	
+			// if the environment is not found, then saves at log
 			if(environment == null){
 				txtEnvironment.setText(R.string.location_not_available);
+				this.logDAO.newLog(Config.LOGGED_USER_NAME, Config.DEVICE_CODE, -1);
 			} else {
+				// If is found the environment, then saves in log and shows in screen
+				this.logDAO.newLog(Config.LOGGED_USER_NAME, Config.DEVICE_CODE, environment.getId());
 				txtEnvironment.setText(environment.getName());
 				try {
+					// Send to server the new location and wait for response that contains the message with the actions
 					ArrayList<Action> actions = this.communication.sendNewLocalization(environment, useDAO.getLastLoggedUser(),devDAO.getDevice());
-					// Aplica ações
+					
+					// Aplica aÃ§Ãµes
+					// Apply the actions
+					// OBS.: Not is implemented yet. Only read the action, but don't modify the system.
 					applyActions(actions);
 				} catch (ClientProtocolException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (ExecutionException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (JSONException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (RuntimeException e){
-					Toast.makeText(getBaseContext(), "Não foi possível enviar a nova localização para o servidor.", Toast.LENGTH_SHORT).show();
+					Toast.makeText(getBaseContext(), "NÃ£o foi possÃ­vel enviar a nova localizaÃ§Ã£o para o servidor.", Toast.LENGTH_SHORT).show();
 					e.printStackTrace();
 				}
 			}
+			// Update the location information to the user and the device are currently
 			useDAO.updateUserEnvironment(environment);
 			devDAO.updateDeviceEnvironment(environment);
 		}
@@ -176,11 +195,11 @@ public class LocalizationActivity extends Activity implements LocationListener {
 			Action action = isActionFunctionality(functionality,actions);
 			if(action != null){
 				// Aplica action - ON ou OFF
-				Log.d("DEBUG APPLY","Ação "+i+" - "+action.getAction()+" fid: "+action.getFunctionalityId());
+				if(Config.DEBUG_LOCATION_ACTIVITY) Log.d("DEBUG APPLY","AÃ§Ã£o "+i+" - "+action.getAction()+" fid: "+action.getFunctionalityId());
 				applyActionTest(action);
 			}else {
-				// retorna ao estado considerado normal / preferencia do usuário
-				// em resumo busca todas as preferencias do usuário, ou configurações default do dispositivo, cria uma ação e envia-a para ser aplicada
+				// retorna ao estado considerado normal / preferencia do usuÃ¡rio
+				// em resumo busca todas as preferencias do usuÃ¡rio, ou configuraÃ§Ãµes default do dispositivo, cria uma aÃ§Ã£o e envia-a para ser aplicada
 				
 			}
 		}		
@@ -193,12 +212,12 @@ public class LocalizationActivity extends Activity implements LocationListener {
 			BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter(); 
         	if(adapter != null) {
         		if(action.getAction().equals("on")){
-        			Log.d("DEBUG", "Bluetooth será habilitado!");
+        			if(Config.DEBUG_LOCATION_ACTIVITY) Log.d("DEBUG", "Bluetooth serÃ¡ habilitado!");
         			if(adapter.getState() != BluetoothAdapter.STATE_ON) {
             	        adapter.enable();
             	    }
         		} else if(action.getAction().equals("off")){
-        			Log.d("DEBUG", "Bluetooth será desabilitado!");
+        			if(Config.DEBUG_LOCATION_ACTIVITY) Log.d("DEBUG", "Bluetooth serÃ¡ desabilitado!");
         			if (adapter.getState() != BluetoothAdapter.STATE_OFF){
         				adapter.disable();
         			}
@@ -209,10 +228,10 @@ public class LocalizationActivity extends Activity implements LocationListener {
 			   AudioManager mode = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
 			   if(mode != null) {
 	        		if(action.getAction().equals("on")){
-	        			Log.d("DEBUG", "Modo Silêncioso habilitado!");
+	        			Log.d("DEBUG", "Modo SilÃªncioso habilitado!");
 	        			mode.setRingerMode(AudioManager.RINGER_MODE_SILENT);
 	        		} else if(action.getAction().equals("off")){
-	        			Log.d("DEBUG", "Modo Silêncioso desabilitado!");
+	        			Log.d("DEBUG", "Modo SilÃªncioso desabilitado!");
 	        			mode.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
 	         	    }  
 	        	}
@@ -221,25 +240,25 @@ public class LocalizationActivity extends Activity implements LocationListener {
 			AudioManager mode2 = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
 			if(mode2 != null) {
         		if(action.getAction().equals("on")){
-        			Log.d("DEBUG", "Modo Silêncioso habilitado!");
+        			Log.d("DEBUG", "Modo VibratÃ³rio habilitado!");
         			mode2.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
         		} else if(action.getAction().equals("off")){
-        			Log.d("DEBUG", "Modo Silêncioso desabilitado!");
+        			Log.d("DEBUG", "Modo VibratÃ³rio desabilitado!");
         			mode2.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
          	    }  
         	}
 			break;
 		case 4: // AIRPLANE_MODE_STATE
-			Log.d("DEBUG", "Não permitido ser alterado!");
+			Log.d("DEBUG", "NÃ£o permitido ser alterado!");
 			break;
 		case 5: // WIFI_STATE    -- WIFI_STATE_DISABLED, WIFI_STATE_DISABLING, WIFI_STATE_ENABLED
 			WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 			if(wifiManager != null) {
         		if(action.getAction().equals("on")){
-        			Log.d("DEBUG", "Modo Silêncioso habilitado!");
+        			Log.d("DEBUG", "Wi-fi habilitado!");
         			wifiManager.setWifiEnabled(true);
         		} else if(action.getAction().equals("off")){
-        			Log.d("DEBUG", "Modo Silêncioso desabilitado!");
+        			Log.d("DEBUG", "Wi-fi desabilitado!");
         			wifiManager.setWifiEnabled(false);
          	    }  
         	}
@@ -268,7 +287,7 @@ public class LocalizationActivity extends Activity implements LocationListener {
 			}
 			break;
 		default:
-			Log.d("DEBUG", "Funcionalidade {fid:"+action.getFunctionalityId()+",action:"+action.getAction()+"} não suportada!");
+			Log.d("DEBUG", "Funcionalidade {fid:"+action.getFunctionalityId()+",action:"+action.getAction()+"} nÃ£o suportada!");
 			break;
 		}		
 	}
@@ -282,33 +301,33 @@ public class LocalizationActivity extends Activity implements LocationListener {
 		switch (action.getFunctionalityId()) {
 		case 1: // BLUETOOTH_STATE
     		if(action.getAction().equals("on")){
-    			Log.d("DEBUG", "Bluetooth será habilitado!");
+    			Log.d("DEBUG", "Bluetooth serÃ¡ habilitado!");
     		} else if(action.getAction().equals("off")){
-    			Log.d("DEBUG", "Bluetooth será desabilitado!");
+    			Log.d("DEBUG", "Bluetooth serÃ¡ desabilitado!");
      	    }  
 			break;
 		case 2: // SILENT_MODE
     		if(action.getAction().equals("on")){
-    			Log.d("DEBUG", "Modo Silêncioso habilitado!");
+    			Log.d("DEBUG", "Modo SilÃªncioso habilitado!");
     		} else if(action.getAction().equals("off")){
-    			Log.d("DEBUG", "Modo Silêncioso desabilitado!");
+    			Log.d("DEBUG", "Modo SilÃªncioso desabilitado!");
      	    }  
 			break;
 		case 3: // VIBRATION_STATE
     		if(action.getAction().equals("on")){
-    			Log.d("DEBUG", "Modo Silêncioso habilitado!");
+    			Log.d("DEBUG", "Modo VibratÃ³rio habilitado!");
     		} else if(action.getAction().equals("off")){
-    			Log.d("DEBUG", "Modo Silêncioso desabilitado!");
+    			Log.d("DEBUG", "Modo VibratÃ³rio desabilitado!");
      	    }  
 			break;
 		case 4: // AIRPLANE_MODE_STATE
-			Log.d("DEBUG", "Não permitido ser alterado!");
+			Log.d("DEBUG", "NÃ£o permitido ser alterado!");
 			break;
 		case 5: // WIFI_STATE    -- WIFI_STATE_DISABLED, WIFI_STATE_DISABLING, WIFI_STATE_ENABLED
         		if(action.getAction().equals("on")){
-        			Log.d("DEBUG", "Modo Silêncioso habilitado!");
+        			Log.d("DEBUG", "Wi-fi habilitado!");
         		} else if(action.getAction().equals("off")){
-        			Log.d("DEBUG", "Modo Silêncioso desabilitado!");
+        			Log.d("DEBUG", "Wi-fi desabilitado!");
          	    }  
 			break;
 		case 9: // RINGER_VOLUME_VALUE
@@ -326,7 +345,7 @@ public class LocalizationActivity extends Activity implements LocationListener {
 			}
 			break;
 		default:
-			Log.d("DEBUG", "Funcionalidade {fid:"+action.getFunctionalityId()+",action:"+action.getAction()+"} não suportada!");
+			Log.d("DEBUG", "Funcionalidade {fid:"+action.getFunctionalityId()+",action:"+action.getAction()+"} nÃ£o suportada!");
 			break;
 		}		
 	}
