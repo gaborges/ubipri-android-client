@@ -55,7 +55,8 @@ public class Config {
 	// Addess of servers
 	//public static String SERVER_HOST = "http://192.168.1.120:8080/UbipriServer/"; // Casa
 	//public static String SERVER_HOST = "http://localhost:8084/UbipriServer/"; // Lab 205
-	public static String SERVER_HOST = "http://143.54.12.154:8080/UbipriServer/"; // Servidor Lab 205
+	//public static String SERVER_HOST = "http://143.54.12.154:8080/UbipriServer/"; // Servidor Lab 205
+  public static String SERVER_HOST = "http://ubicomp.inf.ufrgs.br/UbipriServer/"; // Servidor remoto, funcional
 	
 	// Debugs with Log CAT
 	public static boolean DEBUG_COMMUNICATION = false;
