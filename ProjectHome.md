@@ -1,0 +1,1 @@
+Cliente android para comunicar-se com o servidor Ubipri. A presente aplicação terá a função de prover o contexto de localização do usuário e aplicar regras de privacidade no dispositivo móvel.
